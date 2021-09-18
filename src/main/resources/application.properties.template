@@ -1,0 +1,18 @@
+bot.user.oauth.token = <slack_oauth_token>
+bot.app.token = <slack_app_token>
+channel.id = <slack_channel_id>
+network.credentials.host = <email_host>
+network.credentials.port = <email_port>
+network.credentials.username = <email_username>
+network.credentials.password = <email_password>
+network.credentials.cc = <cc_email>
+network.credentials.receiver = <receiver_email>
+
+company.name = <company_name>
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/<database_name>
+spring.datasource.username=<database_user>
+spring.datasource.password=<database_password>
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.properties.hibernate.format_sql=true
+server.port=<port>
