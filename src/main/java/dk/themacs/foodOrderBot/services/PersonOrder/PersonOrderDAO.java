@@ -1,14 +1,14 @@
 package dk.themacs.foodOrderBot.services.PersonOrder;
 
-import dk.themacs.foodOrderBot.Result;
-import dk.themacs.foodOrderBot.Status;
+import dk.themacs.foodOrderBot.data.Result;
+import dk.themacs.foodOrderBot.data.Status;
 import dk.themacs.foodOrderBot.entities.BatchOrder;
 import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.models.BatchOrderRepository;
 import dk.themacs.foodOrderBot.models.PersonOrderRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -22,7 +22,7 @@ public class PersonOrderDAO implements PersonOrderService {
     }
 
     @Override
-    public Result<PersonOrderReadDTO> read(String userId, LocalDate batchOrderTs) {
+    public Result<PersonOrderReadDTO> read(String userId, LocalDateTime batchOrderTs) {
         Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findByStartedTs(batchOrderTs);
         if(!batchOrderOptional.isPresent()) {
             return new Result(Status.BADREQUEST, "No batch orders for user with timestamp: " + batchOrderTs);

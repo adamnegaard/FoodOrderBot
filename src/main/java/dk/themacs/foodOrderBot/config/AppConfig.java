@@ -1,9 +1,10 @@
-package dk.themacs.foodOrderBot;
+package dk.themacs.foodOrderBot.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-@Component
+@Configuration
 public class AppConfig {
 
     private final String botUserOAuthToken;

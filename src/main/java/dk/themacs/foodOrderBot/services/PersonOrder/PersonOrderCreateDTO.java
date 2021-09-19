@@ -3,15 +3,16 @@ package dk.themacs.foodOrderBot.services.PersonOrder;
 import dk.themacs.foodOrderBot.entities.BatchOrder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class PersonOrderCreateDTO {
     private String userId;
-    private LocalDate batchOrderTs;
+    private LocalDateTime batchOrderTs;
     private String orderText;
 
     public PersonOrderCreateDTO() {}
 
-    public PersonOrderCreateDTO(String userId, LocalDate batchOrderTs, String orderText) {
+    public PersonOrderCreateDTO(String userId, LocalDateTime batchOrderTs, String orderText) {
         this.userId = userId;
         this.batchOrderTs = batchOrderTs;
         this.orderText = orderText;
@@ -25,11 +26,11 @@ public class PersonOrderCreateDTO {
         this.userId = userId;
     }
 
-    public LocalDate getBatchOrderTs() {
+    public LocalDateTime getBatchOrderTs() {
         return batchOrderTs;
     }
 
-    public void setBatchOrderTs(LocalDate batchOrderTs) {
+    public void setBatchOrderTs(LocalDateTime batchOrderTs) {
         this.batchOrderTs = batchOrderTs;
     }
 

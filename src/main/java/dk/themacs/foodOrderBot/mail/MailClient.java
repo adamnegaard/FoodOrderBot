@@ -14,36 +14,24 @@ import javax.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 
 @Service
-public class MailClient implements MailService{
-    private final String companyName;
+public class MailClient implements MailService {
     private final JavaMailSender mailSender;
 
-    private final static Logger log = LoggerFactory.getLogger(ClientHandler.class);
-
-    public MailClient(@Value("${company.name}") String companyName, JavaMailSender mailSender) {
-        this.companyName = companyName;
+    public MailClient(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     @Override
-    public void sendEmail(Mail mail) {
+    public void sendEmail(Mail mail) throws Exception {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
 
-        try {
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+        mimeMessageHelper.setSubject(mail.getMailSubject());
+        mimeMessageHelper.setFrom(new InternetAddress(mail.getMailFrom(), mail.getMailFromName()));
+        if (mail.getMailCc() != null) mimeMessageHelper.setCc(mail.getMailCc());
+        mimeMessageHelper.setTo(mail.getMailTo());
+        mimeMessageHelper.setText(mail.getMailContent());
 
-            mimeMessageHelper.setSubject(mail.getMailSubject());
-            mimeMessageHelper.setFrom(new InternetAddress(mail.getMailFrom(), companyName));
-            mimeMessageHelper.setTo(mail.getMailTo());
-            mimeMessageHelper.setText(mail.getMailContent());
-
-            mailSender.send(mimeMessageHelper.getMimeMessage());
-
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
+        mailSender.send(mimeMessageHelper.getMimeMessage());
     }
 }

@@ -1,6 +1,6 @@
 package dk.themacs.foodOrderBot.services.BatchOrder;
 
-import dk.themacs.foodOrderBot.Result;
+import dk.themacs.foodOrderBot.data.Result;
 
 import java.util.Collection;
 

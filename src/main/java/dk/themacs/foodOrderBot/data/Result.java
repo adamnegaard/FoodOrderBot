@@ -1,4 +1,6 @@
-package dk.themacs.foodOrderBot;
+package dk.themacs.foodOrderBot.data;
+
+import dk.themacs.foodOrderBot.data.Status;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 import static org.springframework.util.MimeTypeUtils.TEXT_PLAIN_VALUE;

@@ -3,14 +3,18 @@ package dk.themacs.foodOrderBot.mail;
 public class Mail {
     private String mailSubject;
     private String mailFrom;
+    private String mailFromName;
     private String mailTo;
     private String mailContent;
+    private String mailCc;
 
-    public Mail(String mailSubject, String mailFrom, String mailTo, String mailContent) {
+    public Mail(String mailSubject, String mailFrom, String mailFromName, String mailTo, String mailContent, String mailCc) {
         this.mailSubject = mailSubject;
         this.mailFrom = mailFrom;
+        this.mailFromName = mailFromName;
         this.mailTo = mailTo;
         this.mailContent = mailContent;
+        this.mailCc = mailCc;
     }
 
 
@@ -30,6 +34,14 @@ public class Mail {
         this.mailFrom = mailFrom;
     }
 
+    public String getMailFromName() {
+        return mailFromName;
+    }
+
+    public void setMailFromName(String mailFromName) {
+        this.mailFromName = mailFromName;
+    }
+
     public String getMailTo() {
         return mailTo;
     }
@@ -44,5 +56,13 @@ public class Mail {
 
     public void setMailContent(String mailContent) {
         this.mailContent = mailContent;
+    }
+
+    public String getMailCc() {
+        return mailCc;
+    }
+
+    public void setMailCc(String mailCc) {
+        this.mailCc = mailCc;
     }
 }

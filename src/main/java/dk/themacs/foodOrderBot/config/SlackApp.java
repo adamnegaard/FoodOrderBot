@@ -1,4 +1,4 @@
-package dk.themacs.foodOrderBot;
+package dk.themacs.foodOrderBot.config;
 
 import com.slack.api.bolt.App;
 import org.springframework.context.annotation.Bean;

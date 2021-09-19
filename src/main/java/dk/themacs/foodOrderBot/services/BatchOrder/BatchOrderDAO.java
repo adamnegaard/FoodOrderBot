@@ -1,7 +1,7 @@
 package dk.themacs.foodOrderBot.services.BatchOrder;
 
-import dk.themacs.foodOrderBot.Result;
-import dk.themacs.foodOrderBot.Status;
+import dk.themacs.foodOrderBot.data.Result;
+import dk.themacs.foodOrderBot.data.Status;
 import dk.themacs.foodOrderBot.entities.BatchOrder;
 import dk.themacs.foodOrderBot.models.BatchOrderRepository;
 import org.springframework.stereotype.Service;

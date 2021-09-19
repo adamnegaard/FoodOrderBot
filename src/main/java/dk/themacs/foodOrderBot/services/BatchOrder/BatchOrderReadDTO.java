@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class BatchOrderReadDTO {
-    private LocalDate startedTs;
+    private LocalDateTime startedTs;
     private boolean isOrdered;
     private Set<PersonOrderReadDTO> personOrders;
 
@@ -27,11 +27,11 @@ public class BatchOrderReadDTO {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public LocalDate getStartedTs() {
+    public LocalDateTime getStartedTs() {
         return startedTs;
     }
 
-    public void setStartedTs(LocalDate startedTs) {
+    public void setStartedTs(LocalDateTime startedTs) {
         this.startedTs = startedTs;
     }
 

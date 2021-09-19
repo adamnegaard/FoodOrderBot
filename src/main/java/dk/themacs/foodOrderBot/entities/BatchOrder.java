@@ -23,7 +23,7 @@ public class BatchOrder {
     )
     private long id;
     @Column(name = "started_ts")
-    private LocalDate startedTs;
+    private LocalDateTime startedTs;
     @Column(name = "is_ordered")
     private boolean isOrdered;
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "batchOrder", cascade = CascadeType.PERSIST, orphanRemoval = true)
@@ -32,7 +32,7 @@ public class BatchOrder {
     public BatchOrder() {
     }
 
-    public BatchOrder(LocalDate startedTs) {
+    public BatchOrder(LocalDateTime startedTs) {
         this.startedTs = startedTs;
         isOrdered = false;
     }
@@ -45,11 +45,11 @@ public class BatchOrder {
         this.id = id;
     }
 
-    public LocalDate getStartedTs() {
+    public LocalDateTime getStartedTs() {
         return startedTs;
     }
 
-    public void setStartedTs(LocalDate startedTs) {
+    public void setStartedTs(LocalDateTime startedTs) {
         this.startedTs = startedTs;
     }
 

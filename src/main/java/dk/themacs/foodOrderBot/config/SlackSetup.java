@@ -1,4 +1,4 @@
-package dk.themacs.foodOrderBot;
+package dk.themacs.foodOrderBot.config;
 
 import com.slack.api.Slack;
 import com.slack.api.bolt.App;
@@ -6,6 +6,8 @@ import com.slack.api.bolt.socket_mode.SocketModeApp;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.socket_mode.SocketModeClient;
+import dk.themacs.foodOrderBot.EventHandler;
+import dk.themacs.foodOrderBot.config.AppConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

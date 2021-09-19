@@ -5,6 +5,9 @@ import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.request.reactions.ReactionsAddRequest;
 import com.slack.api.model.event.MessageEvent;
+import dk.themacs.foodOrderBot.data.Result;
+import dk.themacs.foodOrderBot.data.TimeUtil;
+import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderReadDTO;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderService;
 import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderCreateDTO;
 import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderService;
@@ -12,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Locale;
 
 
@@ -31,22 +34,28 @@ public class EventHandler {
     public Response handleOrderProcessing(MethodsClient client, String channelId, MessageEvent messageEvent, EventContext ctx) {
         String threadTs = messageEvent.getThreadTs();
         String userId = messageEvent.getUser();
-        if(threadTs != null && !batchOrderService.readRecent().isError()) {
 
-            var order = trimOrder(messageEvent.getText());
+        if(threadTs != null) {
+            LocalDateTime startedTs = TimeUtil.getDateTimeFromStringInSeconds(threadTs);
+            Result<BatchOrderReadDTO> batchOrderResult = batchOrderService.readRecent();
 
-            PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, LocalDate.now(), order);
-            personOrderService.create(personOrder);
-            try {
-                client.reactionsAdd(ReactionsAddRequest.builder()
-                        .name(determineEmojiFromOrder(order))
-                        .channel(channelId)
-                        .timestamp(messageEvent.getEventTs())
-                        .build());
+            if(!batchOrderResult.isError() && startedTs.equals(batchOrderResult.getValue().getStartedTs())) {
 
-                log.debug("Processed order of user with ID: " + userId);
-            } catch (Exception e) {
-                log.error("Unknown error processing order of user with ID: " + userId, e);
+                String order = trimOrder(messageEvent.getText());
+
+                PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, startedTs, order);
+                personOrderService.create(personOrder);
+                try {
+                    client.reactionsAdd(ReactionsAddRequest.builder()
+                            .name(determineEmojiFromOrder(order))
+                            .channel(channelId)
+                            .timestamp(messageEvent.getEventTs())
+                            .build());
+
+                    log.debug("Processed order of user with ID: " + userId);
+                } catch (Exception e) {
+                    log.error("Unknown error processing order of user with ID: " + userId, e);
+                }
             }
         }
         return ctx.ack();

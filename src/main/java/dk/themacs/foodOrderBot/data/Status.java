@@ -1,4 +1,4 @@
-package dk.themacs.foodOrderBot;
+package dk.themacs.foodOrderBot.data;
 
 public enum Status {
     OK,
