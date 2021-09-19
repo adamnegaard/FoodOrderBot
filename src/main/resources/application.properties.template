@@ -10,6 +10,9 @@ network.credentials.receiver = <receiver_email>
 
 company.name = <company_name>
 
+logging.level.root = INFO
+logging.file.name = foodOrderBot.log
+
 spring.datasource.url=jdbc:postgresql://localhost:5432/<database_name>
 spring.datasource.username=<database_user>
 spring.datasource.password=<database_password>
