@@ -4,19 +4,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class BatchOrderCreateDTO {
-    private LocalDateTime startedTs;
+    private String startedTs;
 
     public BatchOrderCreateDTO() {}
 
-    public BatchOrderCreateDTO(LocalDateTime startedTs) {
+    public BatchOrderCreateDTO(String startedTs) {
         this.startedTs = startedTs;
     }
 
-    public LocalDateTime getStartedTs() {
+    public String getStartedTs() {
         return startedTs;
     }
 
-    public void setStartedTs(LocalDateTime startedTs) {
+    public void setStartedTs(String startedTs) {
         this.startedTs = startedTs;
     }
 }

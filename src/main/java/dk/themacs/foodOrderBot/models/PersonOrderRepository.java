@@ -1,11 +1,9 @@
 package dk.themacs.foodOrderBot.models;
 
 import dk.themacs.foodOrderBot.entities.PersonOrder;
-import dk.themacs.foodOrderBot.entities.PersonOrderId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 @Repository

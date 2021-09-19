@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 
 public class PersonOrderCreateDTO {
     private String userId;
-    private LocalDateTime batchOrderTs;
+    private String batchOrderTs;
     private String orderText;
 
     public PersonOrderCreateDTO() {}
 
-    public PersonOrderCreateDTO(String userId, LocalDateTime batchOrderTs, String orderText) {
+    public PersonOrderCreateDTO(String userId, String batchOrderTs, String orderText) {
         this.userId = userId;
         this.batchOrderTs = batchOrderTs;
         this.orderText = orderText;
@@ -26,11 +26,11 @@ public class PersonOrderCreateDTO {
         this.userId = userId;
     }
 
-    public LocalDateTime getBatchOrderTs() {
+    public String getBatchOrderTs() {
         return batchOrderTs;
     }
 
-    public void setBatchOrderTs(LocalDateTime batchOrderTs) {
+    public void setBatchOrderTs(String batchOrderTs) {
         this.batchOrderTs = batchOrderTs;
     }
 

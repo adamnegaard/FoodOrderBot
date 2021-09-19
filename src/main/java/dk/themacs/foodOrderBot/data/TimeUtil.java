@@ -1,9 +1,6 @@
 package dk.themacs.foodOrderBot.data;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 
 public class TimeUtil {
     public static LocalDateTime getDateTimeFromStringInSeconds(String ts) {
@@ -11,5 +8,9 @@ public class TimeUtil {
         return Instant.ofEpochSecond(Long.valueOf(secondsTs))
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    public static long getSecondsFromLocalDateTime(LocalDateTime ts) {
+        return ts.toInstant(ZoneOffset.UTC).toEpochMilli();
     }
 }

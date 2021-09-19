@@ -22,7 +22,7 @@ public class PersonOrderDAO implements PersonOrderService {
     }
 
     @Override
-    public Result<PersonOrderReadDTO> read(String userId, LocalDateTime batchOrderTs) {
+    public Result<PersonOrderReadDTO> read(String userId, String batchOrderTs) {
         Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findByStartedTs(batchOrderTs);
         if(!batchOrderOptional.isPresent()) {
             return new Result(Status.BADREQUEST, "No batch orders for user with timestamp: " + batchOrderTs);
@@ -50,13 +50,8 @@ public class PersonOrderDAO implements PersonOrderService {
                 // Otherwise, create a new one if it does not already exist
                 personOrder = new PersonOrder(personOrderCreateDTO.getUserId(), batchOrder, personOrderCreateDTO.getOrderText());
             }
-
-            try {
-                PersonOrder createdPersonOrder = personOrderRepository.save(personOrder);
-                return new Result(Status.CREATED, new PersonOrderReadDTO(createdPersonOrder));
-            } catch (Exception e) {
-                var a = 1;
-            }
+            PersonOrder createdPersonOrder = personOrderRepository.save(personOrder);
+            return new Result(Status.CREATED, new PersonOrderReadDTO(createdPersonOrder));
         }
         return new Result(Status.BADREQUEST, "Batch order with timestamp: " + personOrderCreateDTO.getBatchOrderTs() + " does not exist");
     }

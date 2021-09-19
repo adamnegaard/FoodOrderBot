@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface BatchOrderRepository extends JpaRepository<BatchOrder, Long> {
-    Optional<BatchOrder> findByStartedTs(LocalDateTime startedTs);
+    Optional<BatchOrder> findByStartedTs(String startedTs);
 }

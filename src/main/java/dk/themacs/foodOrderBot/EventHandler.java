@@ -36,14 +36,13 @@ public class EventHandler {
         String userId = messageEvent.getUser();
 
         if(threadTs != null) {
-            LocalDateTime startedTs = TimeUtil.getDateTimeFromStringInSeconds(threadTs);
             Result<BatchOrderReadDTO> batchOrderResult = batchOrderService.readRecent();
 
-            if(!batchOrderResult.isError() && startedTs.equals(batchOrderResult.getValue().getStartedTs())) {
+            if(!batchOrderResult.isError() && threadTs.equals(batchOrderResult.getValue().getStartedTs())) {
 
                 String order = trimOrder(messageEvent.getText());
 
-                PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, startedTs, order);
+                PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, threadTs, order);
                 personOrderService.create(personOrder);
                 try {
                     client.reactionsAdd(ReactionsAddRequest.builder()
@@ -52,7 +51,7 @@ public class EventHandler {
                             .timestamp(messageEvent.getEventTs())
                             .build());
 
-                    log.debug("Processed order of user with ID: " + userId);
+                    log.info("Processed order of user with ID: " + userId);
                 } catch (Exception e) {
                     log.error("Unknown error processing order of user with ID: " + userId, e);
                 }

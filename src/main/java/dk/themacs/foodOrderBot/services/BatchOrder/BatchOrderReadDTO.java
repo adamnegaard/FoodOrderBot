@@ -13,13 +13,15 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class BatchOrderReadDTO {
-    private LocalDateTime startedTs;
+    private long id;
+    private String startedTs;
     private boolean isOrdered;
     private Set<PersonOrderReadDTO> personOrders;
 
     public BatchOrderReadDTO() {}
 
     public BatchOrderReadDTO(BatchOrder batchOrder) {
+        this.id = batchOrder.getId();
         this.startedTs = batchOrder.getStartedTs();
         this.isOrdered = batchOrder.isOrdered();
         this.personOrders = StreamSupport.stream(batchOrder.getPersonOrders().spliterator(), false)
@@ -27,11 +29,19 @@ public class BatchOrderReadDTO {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public LocalDateTime getStartedTs() {
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getStartedTs() {
         return startedTs;
     }
 
-    public void setStartedTs(LocalDateTime startedTs) {
+    public void setStartedTs(String startedTs) {
         this.startedTs = startedTs;
     }
 
