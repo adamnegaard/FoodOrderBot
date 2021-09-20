@@ -12,19 +12,21 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class MailClient implements MailService {
     private final JavaMailSender mailSender;
 
     public MailClient(JavaMailSender mailSender) {
+
         this.mailSender = mailSender;
     }
 
     @Override
     public void sendEmail(Mail mail) throws Exception {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
 
         mimeMessageHelper.setSubject(mail.getMailSubject());
         mimeMessageHelper.setFrom(new InternetAddress(mail.getMailFrom(), mail.getMailFromName()));

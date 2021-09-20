@@ -39,10 +39,10 @@ public class FoodOrderSender {
 
     public void orderFood(Set<PersonOrderReadDTO> personOrders) throws Exception {
         String orderString = getOrders(personOrders);
-        String mailContent = "Hej.\n" +
-                "I dag vil vi gerne bestille følgende varer:\n\n" +
+        String mailContent = "Hej,\n" +
+                "I dag vil vi bestille følgende:\n\n" +
                 orderString + "\n" +
-                "På Forhånd tak.\n\n" +
+                "Tak!\n\n" +
                 "Mvh\n" +
                 "Adam Negaard";
         Mail mail = new Mail("Madbestilling: " + companyName, mailFrom, companyName, mailReceiver, mailContent, mailCc);
