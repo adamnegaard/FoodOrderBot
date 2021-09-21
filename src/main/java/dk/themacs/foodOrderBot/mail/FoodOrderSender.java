@@ -37,20 +37,23 @@ public class FoodOrderSender {
         this.companyName = companyName;
     }
 
-    public void orderFood(Set<PersonOrderReadDTO> personOrders) throws Exception {
+    public String mailContent(Set<PersonOrderReadDTO> personOrders, boolean lateOrder) {
         String orderString = getOrders(personOrders);
-        String mailContent = "Hej,\n" +
-                "I dag vil vi bestille følgende:\n\n" +
+        return "Hej,\n" +
+                (lateOrder ? "Vi håber vi kan nå at tilføje til bestillingen, så den består af følgende" : "I dag vil vi bestille følgende") + ":\n\n" +
                 orderString + "\n" +
                 "Tak!\n\n" +
                 "Mvh\n" +
-                "Adam Negaard";
+                companyName;
+    }
+
+    public void orderFood(Set<PersonOrderReadDTO> personOrders, boolean lateOrder, String mailContent) throws Exception {
         Mail mail = new Mail("Madbestilling: " + companyName, mailFrom, companyName, mailReceiver, mailContent, mailCc);
 
         try {
             mailService.sendEmail(mail);
         } catch (Exception e) {
-            log.error("Cound not order food. Error occured when sending the mail. Had the following orders:\n" + orderString, e);
+            log.error("Cound not order food. Error occured when sending the mail. Had the following mail prepared:\n" + mailContent, e);
             throw e;
         }
     }

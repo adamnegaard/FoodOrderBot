@@ -13,7 +13,7 @@ public class CommandParser {
     public ParsedCommand getParsedCommand(String inputText) throws UnknownCommandException {
         Matcher matcher = pattern.matcher(inputText);
         if(!matcher.matches()) {
-            throw new UnknownCommandException("Kunne ikke forstå kommandoen " + inputText);
+            throw new UnknownCommandException("Mangler en kommando i: '" + inputText + "'");
         }
 
         return new ParsedCommand(matcher.group(1), matcher.group(2));

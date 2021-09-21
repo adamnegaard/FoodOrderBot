@@ -16,6 +16,7 @@ public class SlackApp {
 
     @Bean
     public App initSlackApp() {
+
         return new App();
     }
 }
