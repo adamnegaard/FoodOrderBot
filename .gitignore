@@ -38,3 +38,7 @@ out/
 
 ### SECRETS ###
 application.properties
+
+### LOG FILES ###
+*.log
+*.gz
