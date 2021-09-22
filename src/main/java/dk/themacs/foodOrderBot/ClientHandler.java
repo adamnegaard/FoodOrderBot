@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 public class ClientHandler {
@@ -116,7 +117,9 @@ public class ClientHandler {
                 return;
             //TODO: not more than one people can order as guests
             case "ekstra":
-                handleOrder(client, "guest", threadTs, eventTs, arguments, channelId, lateOrder);
+                // The guest user wil be assigned a random guid as it's user id.
+                UUID randomUserId = UUID.randomUUID();
+                handleOrder(client, randomUserId.toString(), threadTs, eventTs, arguments, channelId, lateOrder);
                 return;
             default:
                 throw new UnknownCommandException("Ukendt kommando: '" + command + "'");
@@ -138,7 +141,7 @@ public class ClientHandler {
         // Remind the person that the order was late
         if (lateOrder) {
             sendMessage(client, "Ordren bliver opdateret, selvom du bestilte for sent! Husk deadline på " + AppConfig.orderHour + ":" + AppConfig.orderMinute, threadTs);
-            orderFood(client, lateOrder);
+            orderFood(client, true);
         }
     }
 
@@ -176,10 +179,10 @@ public class ClientHandler {
             Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
             if(recentBatchOptional.isPresent()) {
                 BatchOrderReadDTO batchOrder = recentBatchOptional.get();
-                Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, true);
+                Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, lateOrder, true);
                 if(foodOrderMessageOptional.isPresent()) {
                     // send the email to the restaurant
-                    foodOrderSender.orderFood(batchOrder.getPersonOrders(), lateOrder, foodOrderMessageOptional.get());
+                    foodOrderSender.orderFood(foodOrderMessageOptional.get());
 
                     // send a confirmation in slack
                     log.info("Successfully ordered the batch order with ID: " + batchOrder.getId());
@@ -196,7 +199,7 @@ public class ClientHandler {
     public Optional<String> getFoodOrderMessage(MethodsClient client) {
         Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
         if(recentBatchOptional.isPresent()) {
-            return getFoodOrderMessage(client, recentBatchOptional.get(), false);
+            return getFoodOrderMessage(client, recentBatchOptional.get(), false, false);
         }
         return Optional.empty();
     }
@@ -211,7 +214,7 @@ public class ClientHandler {
         return Optional.of(batchOrder);
     }
 
-    public Optional<String> getFoodOrderMessage(MethodsClient client, BatchOrderReadDTO batchOrder, boolean inform) {
+    public Optional<String> getFoodOrderMessage(MethodsClient client, BatchOrderReadDTO batchOrder, boolean lateOrder, boolean inform) {
         try {
             Set<PersonOrderReadDTO> personOrders = batchOrder.getPersonOrders();
 
@@ -221,7 +224,7 @@ public class ClientHandler {
                 return Optional.empty();
             }
 
-            String mailContent = foodOrderSender.mailContent(personOrders, false);
+            String mailContent = foodOrderSender.mailContent(personOrders, lateOrder);
             return Optional.of(mailContent);
         } catch (Exception e) {
             log.error("Could not send message in slack", e);

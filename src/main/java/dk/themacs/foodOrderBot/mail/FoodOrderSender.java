@@ -40,14 +40,14 @@ public class FoodOrderSender {
     public String mailContent(Set<PersonOrderReadDTO> personOrders, boolean lateOrder) {
         String orderString = getOrders(personOrders);
         return "Hej,\n" +
-                (lateOrder ? "Vi håber vi kan nå at tilføje til bestillingen, så den består af følgende" : "I dag vil vi bestille følgende") + ":\n\n" +
+                (lateOrder ? "Vi håber vi kan nå at rette bestillingen, så den består af følgende" : "I dag vil vi bestille følgende") + ":\n\n" +
                 orderString + "\n" +
                 "Tak!\n\n" +
                 "Mvh\n" +
                 companyName;
     }
 
-    public void orderFood(Set<PersonOrderReadDTO> personOrders, boolean lateOrder, String mailContent) throws Exception {
+    public void orderFood(String mailContent) throws Exception {
         Mail mail = new Mail("Madbestilling: " + companyName, mailFrom, companyName, mailReceiver, mailContent, mailCc);
 
         try {

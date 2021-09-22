@@ -11,7 +11,7 @@ public class AppConfig {
     private final String botAppToken;
     private final String channelId;
 
-    public final static int reminderMinute = 00;
+    public final static int reminderMinute = 0;
     public final static int reminderHour = 8;
 
     public final static int orderMinute = 30;
@@ -26,7 +26,6 @@ public class AppConfig {
         this.botUserOAuthToken = botUserOAuthToken;
         this.botAppToken = botAppToken;
         this.channelId = channelId;
-
     }
 
     public String getBotUserOAuthToken() {
