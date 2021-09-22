@@ -90,7 +90,7 @@ public class ClientHandler {
                     log.info("Processed order of user with ID: " + userId);
                 } catch(UnknownCommandException unknownCommandException) {
                     try {
-                        sendMessage(client, unknownCommandException.getMessage(), threadTs);
+                        if (unknownCommandException.isInform()) sendMessage(client, unknownCommandException.getMessage(), threadTs);
                     } catch (Exception e) {
 
                     }
@@ -115,7 +115,6 @@ public class ClientHandler {
             case "bestil":
                 handleOrder(client, userId, threadTs, eventTs, arguments, channelId, lateOrder);
                 return;
-            //TODO: not more than one people can order as guests
             case "ekstra":
                 // The guest user wil be assigned a random guid as it's user id.
                 UUID randomUserId = UUID.randomUUID();
