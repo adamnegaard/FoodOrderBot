@@ -20,24 +20,22 @@ public class ScheduledJobs {
         this.client = client;
     }
 
-    //@Scheduled(cron = "0 0 8 * * 0-5")
-    @Scheduled(cron = "0 " + AppConfig.reminderMinute + " " + AppConfig.reminderHour + " * * 0-5")
+    @Scheduled(cron = "0 " + AppConfig.reminderMinute + " " + AppConfig.reminderHour + " * * 1-5")
     public void sendOrderReminder() {
         log.info("Sending out an order reminder...");
         clientHandler.sendFoodOrderReminder(client, "Hvad kunne du tænke dig til frokost på kontoret fra baksandwich.dk i dag?\n" +
                 "Bestilling bliver sendt kl. " + AppConfig.orderHour + ":" + AppConfig.orderMinute + ".");
     }
 
-    //@Scheduled(cron = "0 30 9 * * 1-5")
-    @Scheduled(cron = "0 " + AppConfig.orderMinute + " " + AppConfig.orderHour + " * * 0-5")
+    @Scheduled(cron = "0 " + AppConfig.orderMinute + " " + AppConfig.orderHour + " * * 1-5")
     public void sendOrderAndConfirmation() {
         log.info("Sending out the order...");
         clientHandler.orderFood(client, false);
     }
 
-    @Scheduled(cron = "0 " + AppConfig.closingMinute + " " + AppConfig.closingHour + " * * 0-5")
+    @Scheduled(cron = "0 " + AppConfig.closingMinute + " " + AppConfig.closingHour + " * * 1-5")
     public void closeOrder() {
-        log.info("Sending out the order...");
+        log.info("closing the order...");
         clientHandler.closeOrder();
     }
 

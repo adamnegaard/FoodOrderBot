@@ -16,7 +16,6 @@ public class FoodOrderSender {
 
     private final MailService mailService;
     private final String mailFrom;
-    private final String receiverMail;
     private final String mailCc;
     private final String mailReceiver;
     private final String companyName;
@@ -25,13 +24,11 @@ public class FoodOrderSender {
 
     public FoodOrderSender(MailService mailService,
                            @Value("${network.credentials.username}") String mailFrom,
-                           @Value("${network.credentials.receiver}") String receiverMail,
-                           @Value("${network.credentials.cc}") String mailCc,
+                           @Value("${network.credentials.cc:#{null}}") String mailCc,
                            @Value("${network.credentials.receiver}") String mailReceiver,
                            @Value("${company.name}") String companyName) {
         this.mailService = mailService;
         this.mailFrom = mailFrom;
-        this.receiverMail = receiverMail;
         this.mailCc = mailCc;
         this.mailReceiver = mailReceiver;
         this.companyName = companyName;

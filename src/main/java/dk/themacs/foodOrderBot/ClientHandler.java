@@ -159,6 +159,7 @@ public class ClientHandler {
         return order
                 // Some people might write tak
                 .replace("tak", "")
+                .replace(".", "")
                 .trim();
     }
 
