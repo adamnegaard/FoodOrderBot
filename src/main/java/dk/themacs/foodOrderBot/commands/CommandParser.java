@@ -16,7 +16,10 @@ public class CommandParser {
             throw new UnknownCommandException("Mangler en kommando i: '" + inputText + "'", false);
         }
 
-        return new ParsedCommand(matcher.group(1), matcher.group(2));
+        String command = matcher.group(1);
+        String arguments = matcher.group(2);
+
+        return new ParsedCommand(command, arguments);
     }
 
 }

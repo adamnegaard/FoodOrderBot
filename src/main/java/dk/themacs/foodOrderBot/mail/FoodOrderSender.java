@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class FoodOrderSender {
@@ -36,8 +34,8 @@ public class FoodOrderSender {
 
     public String mailContent(Set<PersonOrderReadDTO> personOrders, boolean lateOrder) {
         String orderString = getOrders(personOrders);
-        return "Hej,\n" +
-                (lateOrder ? "Vi håber vi kan nå at rette bestillingen, så den består af følgende" : "I dag vil vi bestille følgende") + ":\n\n" +
+        return "Hej Betina\n" +
+                (lateOrder ? "Vi håber vi kan nå at rette bestillingen, så den består af følgende" : "Vi vil meget gerne bestille:") + ":\n\n" +
                 orderString + "\n" +
                 "Tak!\n\n" +
                 "Mvh\n" +
@@ -60,16 +58,20 @@ public class FoodOrderSender {
         Map<String, Integer> orderMap = orderSetToMap(personOrders);
 
         for(String orderText : orderMap.keySet()) {
-            stringBuilder.append(orderMap.get(orderText) + "X " + orderText + ".\n");
+            //Capitalise first letter in the order of the email
+            String orderMessage = orderText.substring(0, 1).toUpperCase(Locale.ROOT) + orderText.substring(1);
+            stringBuilder.append(orderMap.get(orderText) + "X " + orderMessage + ".\n");
         }
         return stringBuilder.toString();
     }
 
     private Map<String, Integer> orderSetToMap(Set<PersonOrderReadDTO> personOrders) {
-        Map<String, Integer> orders = new HashMap<>();
+        Map<String, Integer> orders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         for(PersonOrderReadDTO personOrder : personOrders) {
-            String orderText = personOrder.getOrderText();
+            // Convert them all to lowercase
+            String orderText = personOrder.getOrderText().toLowerCase(Locale.ROOT);
+
             if(orders.containsKey(orderText)) {
                 // Overwrite the existing order
                 orders.put(orderText, orders.get(orderText) + 1);

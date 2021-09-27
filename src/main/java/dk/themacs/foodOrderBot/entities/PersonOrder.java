@@ -10,7 +10,7 @@ public class PersonOrder {
     @Id
     @SequenceGenerator(
             name = "person_order_sequence",
-            sequenceName = "batch_order_sequence",
+            sequenceName = "person_order_sequence",
             allocationSize = 1
     )
     @GeneratedValue(
@@ -22,6 +22,9 @@ public class PersonOrder {
     @Column(name = "user_id")
     private String userId;
 
+    @Column(name = "order_ts")
+    private String orderTs;
+
     @ManyToOne(fetch = FetchType.EAGER)
     private BatchOrder batchOrder;
 
@@ -31,8 +34,9 @@ public class PersonOrder {
     public PersonOrder() {
     }
 
-    public PersonOrder(String userId, BatchOrder batchOrder, String orderText) {
+    public PersonOrder(String userId, String orderTs, BatchOrder batchOrder, String orderText) {
         this.userId = userId;
+        this.orderTs = orderTs;
         this.batchOrder = batchOrder;
         this.orderText = orderText;
     }
@@ -51,6 +55,14 @@ public class PersonOrder {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getOrderTs() {
+        return orderTs;
+    }
+
+    public void setOrderTs(String orderTs) {
+        this.orderTs = orderTs;
     }
 
     public BatchOrder getBatchOrder() {
@@ -74,12 +86,13 @@ public class PersonOrder {
         if (this == o) return true;
         if (!(o instanceof PersonOrder)) return false;
         PersonOrder that = (PersonOrder) o;
-        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getBatchOrder(), that.getBatchOrder());
+        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getOrderTs(), that.getOrderTs())
+                && Objects.equals(getBatchOrder(), that.getBatchOrder());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUserId(), getBatchOrder());
+        return Objects.hash(getUserId(), getBatchOrder(), getOrderTs());
     }
 }
 

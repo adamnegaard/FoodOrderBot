@@ -128,7 +128,7 @@ public class ClientHandler {
     private void handleOrder(MethodsClient client, String userId, String threadTs, String eventTs, String arguments, String channelId, boolean lateOrder) throws SlackApiException, IOException {
         String order = trimOrder(arguments);
 
-        PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, threadTs, order);
+        PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, eventTs, threadTs, order);
         personOrderService.create(personOrder);
 
         client.reactionsAdd(ReactionsAddRequest.builder()
@@ -157,10 +157,13 @@ public class ClientHandler {
 
     private String trimOrder(String order) {
         return order
+                .trim()
                 // Some people might write tak
                 .replace("tak", "")
-                .replace(".", "")
-                .trim();
+                // Save an order as lower case
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[.]", "")
+                .replaceAll("…", "");
     }
 
     private ChatPostMessageResponse sendMessage(MethodsClient client, String text) throws SlackApiException, IOException {

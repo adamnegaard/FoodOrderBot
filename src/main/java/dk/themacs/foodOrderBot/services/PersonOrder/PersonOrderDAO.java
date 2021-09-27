@@ -45,10 +45,11 @@ public class PersonOrderDAO implements PersonOrderService {
             if (existingPersonOrder.isPresent()) {
                 // If a person order with the same user id and batch order id, then update the order
                 personOrder = existingPersonOrder.get();
+                personOrder.setOrderTs(personOrderCreateDTO.getOrderTs());
                 personOrder.setOrderText(personOrderCreateDTO.getOrderText());
             } else {
                 // Otherwise, create a new one if it does not already exist
-                personOrder = new PersonOrder(personOrderCreateDTO.getUserId(), batchOrder, personOrderCreateDTO.getOrderText());
+                personOrder = new PersonOrder(personOrderCreateDTO.getUserId(), personOrderCreateDTO.getOrderTs(), batchOrder, personOrderCreateDTO.getOrderText());
             }
             PersonOrder createdPersonOrder = personOrderRepository.save(personOrder);
             return new Result(Status.CREATED, new PersonOrderReadDTO(createdPersonOrder));

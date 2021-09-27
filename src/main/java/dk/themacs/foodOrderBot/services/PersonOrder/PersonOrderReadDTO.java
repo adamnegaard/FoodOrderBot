@@ -5,6 +5,7 @@ import dk.themacs.foodOrderBot.entities.PersonOrder;
 public class PersonOrderReadDTO {
     private long id;
     private String userId;
+    private String orderTs;
     private Long batchOrderId;
     private String orderText;
 
@@ -13,6 +14,7 @@ public class PersonOrderReadDTO {
     public PersonOrderReadDTO(PersonOrder personOrder) {
         this.id = personOrder.getId();
         this.userId = personOrder.getUserId();
+        this.orderTs = personOrder.getOrderTs();
         this.batchOrderId = personOrder.getBatchOrder().getId();
         this.orderText = personOrder.getOrderText();
     }
@@ -31,6 +33,14 @@ public class PersonOrderReadDTO {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getOrderTs() {
+        return orderTs;
+    }
+
+    public void setOrderTs(String orderTs) {
+        this.orderTs = orderTs;
     }
 
     public Long getBatchOrderId() {
