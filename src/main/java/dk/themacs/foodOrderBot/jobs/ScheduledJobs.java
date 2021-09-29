@@ -12,7 +12,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 
-import static java.util.Locale.CANADA;
 import static java.util.Locale.ENGLISH;
 
 @Component
