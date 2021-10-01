@@ -33,6 +33,7 @@ public class MailClient implements MailService {
         if (mail.getMailCc() != null) mimeMessageHelper.setCc(mail.getMailCc());
         mimeMessageHelper.setTo(mail.getMailTo());
         mimeMessageHelper.setText(mail.getMailContent());
+        if(mail.getMailCc() != null) mimeMessageHelper.setReplyTo(mail.getMailCc());
 
         mailSender.send(mimeMessageHelper.getMimeMessage());
     }
