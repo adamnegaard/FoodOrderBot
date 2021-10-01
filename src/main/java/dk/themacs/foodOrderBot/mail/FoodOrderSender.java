@@ -38,7 +38,7 @@ public class FoodOrderSender {
     public String mailContent(Set<PersonOrderReadDTO> personOrders, boolean lateOrder) {
         String orderString = getOrders(personOrders);
         return "Hej Betina\n" +
-                (lateOrder ? "Vi håber vi kan nå at rette bestillingen, så den består af følgende" : "Vi vil meget gerne bestille:") + ":\n\n" +
+                (lateOrder ? "Vi håber vi kan nå at rette bestillingen, så den består af følgende" : "Vi vil meget gerne bestille") + ":\n\n" +
                 orderString + "\n" +
                 "Tak!\n\n" +
                 "Mvh\n" +
