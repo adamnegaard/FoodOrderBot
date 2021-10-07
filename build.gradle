@@ -22,7 +22,6 @@ dependencies {
 	implementation 'org.java-websocket:Java-WebSocket:1.5.2'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'com.sendgrid:sendgrid-java:4.7.5'
 
 	runtimeOnly 'org.postgresql:postgresql'
