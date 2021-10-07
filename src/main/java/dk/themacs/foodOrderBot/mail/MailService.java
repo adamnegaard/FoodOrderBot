@@ -1,7 +1,9 @@
 package dk.themacs.foodOrderBot.mail;
 
+import com.sendgrid.helpers.mail.Mail;
+
 import javax.mail.MessagingException;
 
 public interface MailService {
-    public void sendEmail(Mail mail) throws MessagingException, Exception;
+    void sendEmail(Mail mail) throws Exception;
 }

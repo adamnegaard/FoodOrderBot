@@ -1,13 +1,11 @@
 bot.user.oauth.token = <slack_oauth_token>
 bot.app.token = <slack_app_token>
 channel.id = <slack_channel_id>
-network.credentials.host = <email_host>
-network.credentials.port = <email_port>
-network.credentials.username = <email_username>
-network.credentials.password = <email_password>
-network.credentials.cc = <cc_email>
-network.credentials.receiver = <receiver_email>
+email.cc = <cc_email>
+email.receiver = <receiver_email>
+sendgrid.api-key = <sendgrid_api_key>
 
+company.domain = <company_domain>
 company.name = <company_name>
 
 logging.level.root = INFO

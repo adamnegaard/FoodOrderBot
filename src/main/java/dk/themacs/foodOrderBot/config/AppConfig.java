@@ -11,14 +11,14 @@ public class AppConfig {
     private final String botAppToken;
     private final String channelId;
 
-    public final static int reminderMinute = 0;
-    public final static int reminderHour = 8;
+    public final static int reminderMinute = 24;
+    public final static int reminderHour = 15;
 
-    public final static int orderMinute = 30;
-    public final static int orderHour = 9;
+    public final static int orderMinute = 25;
+    public final static int orderHour = 15;
 
-    public final static int closingMinute = 30;
-    public final static int closingHour = 10;
+    public final static int closingMinute = 26;
+    public final static int closingHour = 15;
 
     public AppConfig(@Value("${bot.user.oauth.token}") String botUserOAuthToken,
                      @Value("${bot.app.token}") String botAppToken,

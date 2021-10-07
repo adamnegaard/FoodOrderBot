@@ -1,6 +1,9 @@
 package dk.themacs.foodOrderBot.mail;
 
-import dk.themacs.foodOrderBot.ClientHandler;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.Personalization;
 import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderReadDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,24 +18,24 @@ import java.util.*;
 public class FoodOrderSender {
 
     private final MailService mailService;
-    private final String mailFrom;
     private final String mailCc;
     private final String mailReceiver;
     private final String companyName;
+    private final String companyDomain;
 
     private final static Logger log = LoggerFactory.getLogger(FoodOrderSender.class);
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
 
     public FoodOrderSender(MailService mailService,
-                           @Value("${network.credentials.username}") String mailFrom,
-                           @Value("${network.credentials.cc:#{null}}") String mailCc,
-                           @Value("${network.credentials.receiver}") String mailReceiver,
-                           @Value("${company.name}") String companyName) {
+                           @Value("${email.cc:#{null}}") String mailCc,
+                           @Value("${email.receiver}") String mailReceiver,
+                           @Value("${company.name}") String companyName,
+                           @Value("${company.domain}") String companyDomain) {
         this.mailService = mailService;
-        this.mailFrom = mailFrom;
         this.mailCc = mailCc;
         this.mailReceiver = mailReceiver;
         this.companyName = companyName;
+        this.companyDomain = companyDomain;
     }
 
     public String mailContent(Set<PersonOrderReadDTO> personOrders, boolean lateOrder) {
@@ -47,8 +50,24 @@ public class FoodOrderSender {
 
     public void orderFood(String mailContent) throws Exception {
         // include date in subject of mail
-        Mail mail = new Mail("Madbestilling den " + LocalDate.now().format(formatter) , mailFrom, companyName, mailReceiver, mailContent, mailCc);
+        //Mail mail = new Mail("Madbestilling den " + LocalDate.now().format(formatter) , mailFrom, companyName, mailReceiver, mailContent, mailCc);
 
+        Email from = new Email("adam.negaard@hotmail.com", companyName);
+        String subject = "Madbestilling den " + LocalDate.now().format(formatter);
+        Email to = new Email(mailReceiver);
+        Content content = new Content("text/plain", mailContent);
+        Mail mail = new Mail(from, subject, to, content);
+        if (mailCc != null) {
+            //set the reply to be the person in charge
+            Email cc = new Email(mailCc);
+            mail.setReplyTo(cc);
+
+            //cc
+            Personalization personalization = new Personalization();
+            personalization.addTo(to);
+            personalization.addCc(cc);
+            mail.addPersonalization(personalization);
+        }
         try {
             mailService.sendEmail(mail);
         } catch (Exception e) {

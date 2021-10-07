@@ -1,40 +1,41 @@
 package dk.themacs.foodOrderBot.mail;
 
-import dk.themacs.foodOrderBot.ClientHandler;
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 
 @Service
 public class MailClient implements MailService {
-    private final JavaMailSender mailSender;
+    private final SendGrid sendGrid;
+    private final static Logger log = LoggerFactory.getLogger(MailClient.class);
 
-    public MailClient(JavaMailSender mailSender) {
+    public MailClient(SendGrid sendGrid) {
+        this.sendGrid = sendGrid;
 
-        this.mailSender = mailSender;
     }
 
     @Override
     public void sendEmail(Mail mail) throws Exception {
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
-
-        mimeMessageHelper.setSubject(mail.getMailSubject());
-        mimeMessageHelper.setFrom(new InternetAddress(mail.getMailFrom(), mail.getMailFromName()));
-        if (mail.getMailCc() != null) mimeMessageHelper.setCc(mail.getMailCc());
-        mimeMessageHelper.setTo(mail.getMailTo());
-        mimeMessageHelper.setText(mail.getMailContent());
-        if(mail.getMailCc() != null) mimeMessageHelper.setReplyTo(mail.getMailCc());
-
-        mailSender.send(mimeMessageHelper.getMimeMessage());
+        Request request = new Request();
+        try {
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+            Response response = sendGrid.api(request);
+            if(response.getStatusCode() != 202) {
+                log.error(response.getBody());
+                throw new Exception("Error when sending mail, got status: " + response.getStatusCode());
+            }
+        } catch (IOException e) {
+            log.error("Unknown error when sending mail", e);
+            throw e;
+        }
     }
 }
