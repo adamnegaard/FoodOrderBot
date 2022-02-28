@@ -13,12 +13,12 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.slack.api:bolt:1.12.1'
-	implementation 'com.slack.api:bolt-servlet:1.12.1'
-	implementation 'com.slack.api:bolt-jetty:1.12.1'
-	implementation 'com.slack.api:bolt-socket-mode:1.12.1'
+	implementation 'com.slack.api:bolt:1.20.0'
+	implementation 'com.slack.api:bolt-servlet:1.20.0'
+	implementation 'com.slack.api:bolt-jetty:1.20.0'
+	implementation 'com.slack.api:bolt-socket-mode:1.20.0'
 	implementation 'javax.websocket:javax.websocket-api:1.1'
-	implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:1.17'
+	implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:2.0.0'
 	implementation 'org.java-websocket:Java-WebSocket:1.5.2'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

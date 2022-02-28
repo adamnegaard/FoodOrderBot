@@ -16,6 +16,7 @@ import static java.util.Locale.ENGLISH;
 
 @Component
 public class ScheduledJobs {
+
     private final ClientHandler clientHandler;
     private final MethodsClient client;
 

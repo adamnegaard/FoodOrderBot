@@ -13,7 +13,7 @@ import dk.themacs.foodOrderBot.commands.UnknownCommandException;
 import dk.themacs.foodOrderBot.config.AppConfig;
 import dk.themacs.foodOrderBot.data.Result;
 import dk.themacs.foodOrderBot.data.TimeUtil;
-import dk.themacs.foodOrderBot.mail.FoodOrderSender;
+import dk.themacs.foodOrderBot.mail.formatters.FoodOrderSender;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderCreateDTO;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderReadDTO;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderService;
@@ -33,6 +33,7 @@ import java.util.UUID;
 
 @Component
 public class ClientHandler {
+
     private final AppConfig appConfig;
     private final BatchOrderService batchOrderService;
     private final FoodOrderSender foodOrderSender;
@@ -180,10 +181,14 @@ public class ClientHandler {
     public void orderFood(MethodsClient client, boolean lateOrder) {
         try {
             Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
+
             if(recentBatchOptional.isPresent()) {
                 BatchOrderReadDTO batchOrder = recentBatchOptional.get();
+
                 Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, lateOrder, true);
+
                 if(foodOrderMessageOptional.isPresent()) {
+
                     // send the email to the restaurant
                     foodOrderSender.orderFood(foodOrderMessageOptional.get());
 
@@ -200,11 +205,14 @@ public class ClientHandler {
     }
 
     public Optional<String> getFoodOrderMessage(MethodsClient client) {
+
         Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
+
         if(recentBatchOptional.isPresent()) {
             return getFoodOrderMessage(client, recentBatchOptional.get(), false, false);
         }
         return Optional.empty();
+
     }
 
     private Optional<BatchOrderReadDTO> getRecentBatchOrder() {
@@ -219,15 +227,23 @@ public class ClientHandler {
 
     public Optional<String> getFoodOrderMessage(MethodsClient client, BatchOrderReadDTO batchOrder, boolean lateOrder, boolean inform) {
         try {
+
             Set<PersonOrderReadDTO> personOrders = batchOrder.getPersonOrders();
 
             if(personOrders.isEmpty()) {
                 log.info("No person orders were made on the batch for today");
+
                 if (inform) sendMessage(client, "Ingen bestillinger var oprettet, sender ikke en ordre.", batchOrder.getStartedTs());
                 return Optional.empty();
             }
 
-            String mailContent = foodOrderSender.mailContent(personOrders, lateOrder);
+            String mailContent = null;
+            if(lateOrder) {
+                mailContent = foodOrderSender.getOnTimeOrder(personOrders);
+            } else {
+                mailContent = foodOrderSender.getLateOrder(personOrders);
+            }
+
             return Optional.of(mailContent);
         } catch (Exception e) {
             log.error("Could not send message in slack", e);

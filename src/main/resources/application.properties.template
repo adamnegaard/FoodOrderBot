@@ -11,6 +11,8 @@ network.credentials.receiver = <receiver_email>
 company.name = <company_name>
 
 logging.level.root = INFO
+logging.level.com.slack.api = WARN
+
 logging.file.name = foodOrderBot.log
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/<database_name>

@@ -45,19 +45,25 @@ public class SlackSetup {
             app.command("/ordre", (req, ctx) -> {
 
                 Optional<String> orderMessageOptional = clientHandler.getFoodOrderMessage(methodsClient);
-                if(orderMessageOptional.isPresent()) {
-                    return ctx.ack(orderMessageOptional.get());
-                }
-                else return ctx.ack("Ingen åbne bestillinger.");
+                String orderMessage = orderMessageOptional.orElse("Ingen åbne bestillinger.");
+
+                return ctx.ack(orderMessage);
+
             });
 
-            app.event(MessageEvent.class, (payload, ctx) -> clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), userId, payload.getEvent(), ctx));
+            app.event(MessageEvent.class, (payload, ctx) ->  {
 
+                return clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), userId, payload.getEvent(), ctx);
+
+            });
+
+            // socket mode for the app
             SocketModeApp socketModeApp = new SocketModeApp(
                     appConfig.getBotAppToken(),
                     SocketModeClient.Backend.JavaWebSocket,
                     app
             );
+
             socketModeApp.startAsync();
         } catch (Exception e) {
             e.printStackTrace();
