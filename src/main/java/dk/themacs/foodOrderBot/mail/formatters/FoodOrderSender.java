@@ -1,8 +1,8 @@
 package dk.themacs.foodOrderBot.mail.formatters;
 
+import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.mail.Mail;
 import dk.themacs.foodOrderBot.mail.MailService;
-import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderReadDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public abstract class FoodOrderSender {
         this.companyName = companyName;
     }
 
-    public String getOnTimeOrder(Set<PersonOrderReadDTO> personOrders) {
+    public String getOnTimeOrder(Set<PersonOrder> personOrders) {
         String orderString = getOrders(personOrders);
 
         return getHello() + "\n" +
@@ -40,7 +40,7 @@ public abstract class FoodOrderSender {
                 companyName;
     }
 
-    public String getLateOrder(Set<PersonOrderReadDTO> personOrders) {
+    public String getLateOrder(Set<PersonOrder> personOrders) {
         String orderString = getOrders(personOrders);
 
         return getHello() + "\n" +
@@ -82,7 +82,7 @@ public abstract class FoodOrderSender {
         return s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);
     }
 
-    protected abstract String getOrders(Set<PersonOrderReadDTO> personOrders);
+    protected abstract String getOrders(Set<PersonOrder> personOrders);
 
     protected abstract String getHello();
 

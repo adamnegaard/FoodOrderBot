@@ -6,6 +6,7 @@ import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.reactions.ReactionsAddRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.reactions.ReactionsAddResponse;
 import com.slack.api.model.event.MessageEvent;
 import dk.themacs.foodOrderBot.commands.CommandParser;
 import dk.themacs.foodOrderBot.commands.ParsedCommand;
@@ -13,12 +14,10 @@ import dk.themacs.foodOrderBot.commands.UnknownCommandException;
 import dk.themacs.foodOrderBot.config.AppConfig;
 import dk.themacs.foodOrderBot.data.Result;
 import dk.themacs.foodOrderBot.data.TimeUtil;
+import dk.themacs.foodOrderBot.entities.BatchOrder;
+import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.mail.formatters.FoodOrderSender;
-import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderCreateDTO;
-import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderReadDTO;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderService;
-import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderCreateDTO;
-import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderReadDTO;
 import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,11 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import static com.slack.api.model.block.Blocks.*;
+import static com.slack.api.model.block.composition.BlockCompositions.*;
+import static com.slack.api.model.block.element.BlockElements.asElements;
+import static com.slack.api.model.block.element.BlockElements.button;
 
 @Component
 public class ClientHandler {
@@ -58,8 +62,9 @@ public class ClientHandler {
             log.info("Successfully sent out the food order reminder");
 
             // Insert it into the database
-            BatchOrderCreateDTO batchOrder = new BatchOrderCreateDTO(messageResponse.getTs());
-            Result<BatchOrderReadDTO> result = batchOrderService.create(batchOrder);
+            BatchOrder batchOrder = new BatchOrder(messageResponse.getTs());
+            Result<BatchOrder> result = batchOrderService.create(batchOrder);
+
             if(!result.isError()) {
                 log.info("Created the batch order in the database at " + TimeUtil.getDateTimeFromStringInSeconds(messageResponse.getTs()));
             } else {
@@ -71,12 +76,13 @@ public class ClientHandler {
     }
 
     public Response handleOrderProcessing(MethodsClient client, String channelId, String botUserId, MessageEvent messageEvent, EventContext ctx) {
+
         String threadTs = messageEvent.getThreadTs();
         String userId = messageEvent.getUser();
 
         // ignore all messages coming from the bot itself
         if(!botUserId.equals(userId) && threadTs != null) {
-            Result<BatchOrderReadDTO> batchOrderResult = batchOrderService.readRecent();
+            Result<BatchOrder> batchOrderResult = batchOrderService.readRecent();
 
             if(!batchOrderResult.isError() && threadTs.equals(batchOrderResult.getValue().getStartedTs())) {
 
@@ -91,7 +97,8 @@ public class ClientHandler {
                     log.info("Processed order of user with ID: " + userId);
                 } catch(UnknownCommandException unknownCommandException) {
                     try {
-                        if (unknownCommandException.isInform()) sendMessage(client, unknownCommandException.getMessage(), threadTs);
+                        if (unknownCommandException.isInform())
+                            sendMessage(client, unknownCommandException.getMessage(), threadTs);
                     } catch (Exception e) {
 
                     }
@@ -103,7 +110,7 @@ public class ClientHandler {
         return ctx.ack();
     }
 
-    public boolean isOrderLate(){
+    public boolean isOrderLate() {
         LocalDateTime now = LocalDateTime.now();
         return now.getHour() >= AppConfig.orderHour && now.getMinute() >= AppConfig.orderMinute;
     }
@@ -129,18 +136,13 @@ public class ClientHandler {
     private void handleOrder(MethodsClient client, String userId, String threadTs, String eventTs, String arguments, String channelId, boolean lateOrder) throws SlackApiException, IOException {
         String order = trimOrder(arguments);
 
-        PersonOrderCreateDTO personOrder = new PersonOrderCreateDTO(userId, eventTs, threadTs, order);
-        personOrderService.create(personOrder);
+        PersonOrder personOrder = new PersonOrder(userId, eventTs, order);
+        personOrderService.create(personOrder, threadTs);
 
-        client.reactionsAdd(ReactionsAddRequest.builder()
-                .name(determineEmojiFromOrder(order))
-                .channel(channelId)
-                .timestamp(eventTs)
-                .build());
+        addReaction(client, determineEmojiFromOrder(order), channelId, eventTs);
 
         // Remind the person that the order was late
         if (lateOrder) {
-            sendMessage(client, "Ordren bliver opdateret, selvom du bestilte for sent! Husk deadline på " + AppConfig.orderHour + ":" + AppConfig.orderMinute, threadTs);
             orderFood(client, true);
         }
     }
@@ -167,6 +169,14 @@ public class ClientHandler {
                 .replaceAll("…", "");
     }
 
+    public ReactionsAddResponse addReaction(MethodsClient client, String emoji, String channelId, String eventTs) throws SlackApiException, IOException {
+        return client.reactionsAdd(ReactionsAddRequest.builder()
+                .name(emoji)
+                .channel(channelId)
+                .timestamp(eventTs)
+                .build());
+    }
+
     private ChatPostMessageResponse sendMessage(MethodsClient client, String text) throws SlackApiException, IOException {
         return sendMessage(client, text,null);
     }
@@ -178,70 +188,111 @@ public class ClientHandler {
                 .text(text));
     }
 
+    private ChatPostMessageResponse sendFoodOrderActionMessage(MethodsClient client, String messageTitle, String foodOrderMessage, String threadTs) throws SlackApiException, IOException {
+
+        return client.chatPostMessage(r -> r
+                .channel(appConfig.getChannelId())
+                .blocks(asBlocks(
+                        section(section -> section.text(markdownText("*" + messageTitle + "*"))),
+                        section(section -> section.text(plainText(foodOrderMessage))),
+                        divider(),
+                        actions(actions -> actions
+                                .elements(asElements(button(b -> b.text(plainText("Bestil"))
+                                        .value(foodOrderMessage)
+                                        .style("primary")
+                                        .actionId("order_food_action")
+                                        .confirm(confirmationDialog(c -> c
+                                                .title(plainText("Har alle på kontoret bestilt mad?"))
+                                                .text(plainText("Er du sikker?"))
+                                                .confirm(plainText("Ja"))
+                                                .deny(plainText("Nej")))))))
+                        )))
+                .threadTs(threadTs)
+                .text(messageTitle));
+    }
+
+
     public void orderFood(MethodsClient client, boolean lateOrder) {
+
         try {
-            Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
+            Optional<BatchOrder> recentBatchOptional = getRecentBatchOrder();
 
             if(recentBatchOptional.isPresent()) {
-                BatchOrderReadDTO batchOrder = recentBatchOptional.get();
+
+                BatchOrder batchOrder = recentBatchOptional.get();
 
                 Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, lateOrder, true);
 
                 if(foodOrderMessageOptional.isPresent()) {
 
-                    // send the email to the restaurant
-                    foodOrderSender.orderFood(foodOrderMessageOptional.get());
+                    String foodOrderMessage = foodOrderMessageOptional.get();
 
-                    // send a confirmation in slack
-                    log.info("Successfully ordered the batch order with ID: " + batchOrder.getId());
-
-                    //Send a confirmation in slack if its not a delayed message
-                    if (!lateOrder) sendMessage(client, "Bestillingen er sendt!", batchOrder.getStartedTs());
+                    if (lateOrder) {
+                        handleLateOrder(client, foodOrderMessage, batchOrder);
+                    } else {
+                        handleOnTimeOrder(client, foodOrderMessage, batchOrder);
+                    }
                 }
             }
+
         } catch(Exception e) {
             log.error("Error ordering food", e);
         }
     }
 
+    private void handleOnTimeOrder(MethodsClient client, String foodOrderMessage, BatchOrder batchOrder) throws SlackApiException, IOException {
+        // log a confirmation
+        log.info("Sent out message for batch order with id: " + batchOrder.getId());
+        // send a confirmation in slack
+        sendFoodOrderActionMessage(client, "Bestil dagens frokost besked", foodOrderMessage, batchOrder.getStartedTs());
+    }
+
+    private void handleLateOrder(MethodsClient client, String foodOrderMessage, BatchOrder batchOrder) throws SlackApiException, IOException {
+        // log a confirmation
+        log.info("Sent out late message for batch order with id: " + batchOrder.getId());
+        // send a confirmation in slack
+        sendFoodOrderActionMessage(client, "Opdater dagens frokost besked", foodOrderMessage, batchOrder.getStartedTs());
+    }
+
     public Optional<String> getFoodOrderMessage(MethodsClient client) {
 
-        Optional<BatchOrderReadDTO> recentBatchOptional = getRecentBatchOrder();
+        Optional<BatchOrder> recentBatchOptional = getRecentBatchOrder();
 
         if(recentBatchOptional.isPresent()) {
             return getFoodOrderMessage(client, recentBatchOptional.get(), false, false);
         }
+
         return Optional.empty();
 
     }
 
-    private Optional<BatchOrderReadDTO> getRecentBatchOrder() {
-        Result<BatchOrderReadDTO> batchOrderResult = batchOrderService.readRecent();
+    private Optional<BatchOrder> getRecentBatchOrder() {
+        Result<BatchOrder> batchOrderResult = batchOrderService.readRecent();
         if (batchOrderResult.isError()) {
             log.info("No batch orders were started today");
             return Optional.empty();
         }
-        BatchOrderReadDTO batchOrder = batchOrderResult.getValue();
+        BatchOrder batchOrder = batchOrderResult.getValue();
         return Optional.of(batchOrder);
     }
 
-    public Optional<String> getFoodOrderMessage(MethodsClient client, BatchOrderReadDTO batchOrder, boolean lateOrder, boolean inform) {
+    public Optional<String> getFoodOrderMessage(MethodsClient client, BatchOrder batchOrder, boolean lateOrder, boolean inform) {
         try {
 
-            Set<PersonOrderReadDTO> personOrders = batchOrder.getPersonOrders();
+            Set<PersonOrder> personOrders = batchOrder.getPersonOrders();
 
             if(personOrders.isEmpty()) {
                 log.info("No person orders were made on the batch for today");
 
-                if (inform) sendMessage(client, "Ingen bestillinger var oprettet, sender ikke en ordre.", batchOrder.getStartedTs());
+                if (inform) sendMessage(client, "Ingen bestillinger var oprettet.", batchOrder.getStartedTs());
                 return Optional.empty();
             }
 
-            String mailContent = null;
+            String mailContent;
             if(lateOrder) {
-                mailContent = foodOrderSender.getOnTimeOrder(personOrders);
-            } else {
                 mailContent = foodOrderSender.getLateOrder(personOrders);
+            } else {
+                mailContent = foodOrderSender.getOnTimeOrder(personOrders);
             }
 
             return Optional.of(mailContent);
@@ -251,13 +302,17 @@ public class ClientHandler {
         }
     }
 
+    public void orderFood(String order) throws Exception {
+        foodOrderSender.orderFood(order);
+    }
+
     public void closeOrder() {
-        Result<BatchOrderReadDTO> batchOrderResult = batchOrderService.readRecent();
+        Result<BatchOrder> batchOrderResult = batchOrderService.readRecent();
         if (batchOrderResult.isError()) {
             log.info("No batch orders were started today");
             return;
         }
-        BatchOrderReadDTO batchOrder = batchOrderResult.getValue();
+        BatchOrder batchOrder = batchOrderResult.getValue();
         batchOrderService.order(batchOrder.getId());
         log.info("Successfully closed the batch order with ID: " + batchOrder.getId());
     }

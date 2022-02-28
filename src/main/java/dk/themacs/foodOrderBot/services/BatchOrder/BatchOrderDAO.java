@@ -21,15 +21,14 @@ public class BatchOrderDAO implements BatchOrderService {
     }
 
     @Override
-    public Collection<BatchOrderReadDTO> read() {
+    public Collection<BatchOrder> read() {
         Iterable<BatchOrder> batchOrders = batchOrderRepository.findAll();
         return StreamSupport.stream(batchOrders.spliterator(), false)
-                .map(batchOrder -> new BatchOrderReadDTO(batchOrder))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Result<BatchOrderReadDTO> readRecent() {
+    public Result<BatchOrder> readRecent() {
         Iterable<BatchOrder> batchOrders = batchOrderRepository.findAll();
         Optional<BatchOrder> batchOrderOptional = StreamSupport.stream(batchOrders.spliterator(), false)
                 .filter(bo -> !bo.isOrdered())
@@ -39,29 +38,28 @@ public class BatchOrderDAO implements BatchOrderService {
             return new Result(Status.BADREQUEST, "No batch orders that are not ordered yet");
         }
 
-        return new Result(Status.OK, new BatchOrderReadDTO(batchOrderOptional.get()));
+        return new Result(Status.OK, batchOrderOptional.get());
     }
 
     @Override
-    public Result<BatchOrderReadDTO> order(long batchOrderId) {
+    public Result<BatchOrder> order(long batchOrderId) {
         Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findById(batchOrderId);
         if(batchOrderOptional.isPresent()) {
             BatchOrder existingBatchOrder = batchOrderOptional.get();
             existingBatchOrder.setOrdered(true);
             BatchOrder updatedBatchOrder = batchOrderRepository.save(existingBatchOrder);
-            return new Result(Status.OK, new BatchOrderReadDTO(updatedBatchOrder));
+            return new Result(Status.OK, updatedBatchOrder);
         }
         return new Result(Status.BADREQUEST, "No batch orders with ID: " + batchOrderId);
     }
 
     @Override
-    public Result<BatchOrderReadDTO> create(BatchOrderCreateDTO batchOrderDTO) {
+    public Result<BatchOrder> create(BatchOrder batchOrderCreate) {
         try {
-            BatchOrder batchOrderCreate = new BatchOrder(batchOrderDTO.getStartedTs());
             BatchOrder batchOrder = batchOrderRepository.save(batchOrderCreate);
-            return new Result(Status.CREATED, new BatchOrderReadDTO(batchOrder));
+            return new Result(Status.CREATED, batchOrder);
         } catch (Exception e) {
-            return new Result(Status.BADREQUEST, "Could not create the batch order with timestamp: " + batchOrderDTO.getStartedTs());
+            return new Result(Status.BADREQUEST, "Could not create the batch order with timestamp: " + batchOrderCreate.getStartedTs());
         }
     }
 }

@@ -1,7 +1,7 @@
 package dk.themacs.foodOrderBot.mail.formatters;
 
+import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.mail.MailService;
-import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderReadDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ public class SenderWithNumbers extends FoodOrderSender {
     }
 
     @Override
-    protected String getOrders(Set<PersonOrderReadDTO> personOrders) {
+    protected String getOrders(Set<PersonOrder> personOrders) {
         Map<String, Integer> orderMap = orderSetToMap(personOrders);
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -51,10 +51,10 @@ public class SenderWithNumbers extends FoodOrderSender {
         return "Vi vil meget gerne bestille";
     }
 
-    private Map<String, Integer> orderSetToMap(Set<PersonOrderReadDTO> personOrders) {
+    private Map<String, Integer> orderSetToMap(Set<PersonOrder> personOrders) {
         Map<String, Integer> orders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-        for(PersonOrderReadDTO personOrder : personOrders) {
+        for(PersonOrder personOrder : personOrders) {
             // Convert them all to lowercase
             String orderText = personOrder.getOrderText().toLowerCase(Locale.ROOT);
 

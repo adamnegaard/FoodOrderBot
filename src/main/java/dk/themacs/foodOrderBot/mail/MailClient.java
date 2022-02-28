@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 public class MailClient implements MailService {
+
     private final JavaMailSender mailSender;
 
     public MailClient(JavaMailSender mailSender) {

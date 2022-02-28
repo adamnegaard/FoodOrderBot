@@ -34,6 +34,12 @@ public class PersonOrder {
     public PersonOrder() {
     }
 
+    public PersonOrder(String userId, String orderTs, String orderText) {
+        this.userId = userId;
+        this.orderTs = orderTs;
+        this.orderText = orderText;
+    }
+
     public PersonOrder(String userId, String orderTs, BatchOrder batchOrder, String orderText) {
         this.userId = userId;
         this.orderTs = orderTs;

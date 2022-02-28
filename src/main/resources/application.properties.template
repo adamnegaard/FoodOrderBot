@@ -1,6 +1,11 @@
 bot.user.oauth.token = <slack_oauth_token>
 bot.app.token = <slack_app_token>
 channel.id = <slack_channel_id>
+email.cc = <cc_email>
+email.receiver = <receiver_email>
+sendgrid.api-key = <send_grid_api_key>
+
+# old values
 network.credentials.host = <email_host>
 network.credentials.port = <email_port>
 network.credentials.username = <email_username>
@@ -9,9 +14,10 @@ network.credentials.cc = <cc_email>
 network.credentials.receiver = <receiver_email>
 
 company.name = <company_name>
+company.domain = <company_domain>
 
 logging.level.root = INFO
-logging.level.com.slack.api = WARN
+logging.level.com.slack.api = ERROR
 
 logging.file.name = foodOrderBot.log
 

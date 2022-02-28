@@ -22,7 +22,7 @@ public class PersonOrderDAO implements PersonOrderService {
     }
 
     @Override
-    public Result<PersonOrderReadDTO> read(String userId, String batchOrderTs) {
+    public Result<PersonOrder> read(String userId, String batchOrderTs) {
         Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findByStartedTs(batchOrderTs);
         if(!batchOrderOptional.isPresent()) {
             return new Result(Status.BADREQUEST, "No batch orders for user with timestamp: " + batchOrderTs);
@@ -32,28 +32,30 @@ public class PersonOrderDAO implements PersonOrderService {
         if(!personOrderOptional.isPresent()) {
             return new Result(Status.BADREQUEST, "No person orders for user with ID: " + userId + " on batch order with timestamp: " + batchOrderTs);
         }
-        return new Result(Status.OK, new PersonOrderReadDTO(personOrderOptional.get()));
+        return new Result(Status.OK, personOrderOptional.get());
     }
 
     @Override
-    public Result<PersonOrderReadDTO> create(PersonOrderCreateDTO personOrderCreateDTO) {
-        Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findByStartedTs(personOrderCreateDTO.getBatchOrderTs());
+    public Result<PersonOrder> create(PersonOrder personOrderCreate, String batchOrderTs) {
+        Optional<BatchOrder> batchOrderOptional = batchOrderRepository.findByStartedTs(batchOrderTs);
+
         if(batchOrderOptional.isPresent()) {
             BatchOrder batchOrder = batchOrderOptional.get();
             PersonOrder personOrder;
-            Optional<PersonOrder> existingPersonOrder = personOrderRepository.findByUserIdAndBatchOrderId(personOrderCreateDTO.getUserId(), batchOrder.getId());
+            Optional<PersonOrder> existingPersonOrder = personOrderRepository.findByUserIdAndBatchOrderId(personOrderCreate.getUserId(), batchOrder.getId());
             if (existingPersonOrder.isPresent()) {
                 // If a person order with the same user id and batch order id, then update the order
                 personOrder = existingPersonOrder.get();
-                personOrder.setOrderTs(personOrderCreateDTO.getOrderTs());
-                personOrder.setOrderText(personOrderCreateDTO.getOrderText());
+                personOrder.setOrderTs(personOrderCreate.getOrderTs());
+                personOrder.setOrderText(personOrderCreate.getOrderText());
             } else {
                 // Otherwise, create a new one if it does not already exist
-                personOrder = new PersonOrder(personOrderCreateDTO.getUserId(), personOrderCreateDTO.getOrderTs(), batchOrder, personOrderCreateDTO.getOrderText());
+                personOrder = new PersonOrder(personOrderCreate.getUserId(), personOrderCreate.getOrderTs(), batchOrder, personOrderCreate.getOrderText());
             }
             PersonOrder createdPersonOrder = personOrderRepository.save(personOrder);
-            return new Result(Status.CREATED, new PersonOrderReadDTO(createdPersonOrder));
+            return new Result(Status.CREATED, createdPersonOrder);
         }
-        return new Result(Status.BADREQUEST, "Batch order with timestamp: " + personOrderCreateDTO.getBatchOrderTs() + " does not exist");
+
+        return new Result(Status.BADREQUEST, "Batch order with timestamp: " + batchOrderTs + " does not exist");
     }
 }

@@ -1,20 +1,30 @@
 package dk.themacs.foodOrderBot.config;
 
 import com.slack.api.Slack;
+import com.slack.api.app_backend.interactive_components.payload.BlockActionPayload;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.auth.AuthTestRequest;
 import com.slack.api.methods.response.auth.AuthTestResponse;
+import com.slack.api.methods.response.chat.ChatUpdateResponse;
+import com.slack.api.model.Message;
+import com.slack.api.model.block.ActionsBlock;
+import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.socket_mode.SocketModeClient;
 import dk.themacs.foodOrderBot.ClientHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Configuration
 public class SlackSetup {
@@ -22,6 +32,8 @@ public class SlackSetup {
     private final AppConfig appConfig;
     private final ClientHandler clientHandler;
     private final App app;
+
+    private final static Logger log = LoggerFactory.getLogger(SlackSetup.class);
 
     public SlackSetup(AppConfig appConfig, ClientHandler clientHandler, App app) {
         this.appConfig = appConfig;
@@ -34,7 +46,7 @@ public class SlackSetup {
         Slack slack = app.getSlack();
         MethodsClient methodsClient = slack.methods(appConfig.getBotUserOAuthToken());
 
-        //Get the bots UserID
+        // get the bots userID
         AuthTestResponse authTestResponse = methodsClient.authTest(AuthTestRequest.builder().build());
         String userId = authTestResponse.getUserId();
 
@@ -51,9 +63,48 @@ public class SlackSetup {
 
             });
 
-            app.event(MessageEvent.class, (payload, ctx) ->  {
+            app.event(MessageEvent.class, (req, ctx) ->  {
 
-                return clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), userId, payload.getEvent(), ctx);
+                clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), userId, req.getEvent(), ctx);
+
+                return ctx.ack();
+
+            });
+
+            // when a user clicks a button in the actions block
+            app.blockAction("order_food_action", (req, ctx) -> {
+
+                BlockActionPayload payLoad = req.getPayload();
+                BlockActionPayload.User user = payLoad.getUser();
+
+                try {
+
+                    List<BlockActionPayload.Action> actions = payLoad.getActions();
+
+                    String foodOrderMessage = actions.get(0).getValue();
+
+                    // now order the food
+                    clientHandler.orderFood(foodOrderMessage);
+
+                    log.info("User with name " + user.getName() + " successfully ordered food");
+
+                    // react with a checkmark on the reminder and the action
+                    Message actionMessage = payLoad.getMessage();
+                    String channelId = payLoad.getChannel().getId();
+                    clientHandler.addReaction(methodsClient, "white_check_mark", channelId, actionMessage.getThreadTs());
+                    clientHandler.addReaction(methodsClient, "white_check_mark", channelId, actionMessage.getTs());
+
+                    // remove the actions, since it should not be ordered again
+                    removeActions(methodsClient, actionMessage, channelId);
+
+
+                } catch (Exception e) {
+
+                    log.error("Error when user with name " + user.getName() + " ordered food", e);
+
+                }
+
+                return ctx.ack();
 
             });
 
@@ -69,6 +120,18 @@ public class SlackSetup {
             e.printStackTrace();
         }
         return methodsClient;
+    }
+
+    private ChatUpdateResponse removeActions(MethodsClient methodsClient, Message actionMessage, String channelId) throws SlackApiException, IOException {
+
+        // get all blocks that are not Actions
+        List<LayoutBlock> blocks = actionMessage.getBlocks().stream().filter(b -> !ActionsBlock.class.isInstance(b)).collect(Collectors.toList());
+
+        return methodsClient.chatUpdate(c -> c
+                .channel(channelId)
+                .blocks(blocks)
+                .ts(actionMessage.getTs())
+                .text(actionMessage.getText()));
     }
 
 

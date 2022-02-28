@@ -29,18 +29,18 @@ public class ScheduledJobs {
 
     @Scheduled(cron = "0 " + AppConfig.reminderMinute + " " + AppConfig.reminderHour + " * * 1-5")
     public void sendOrderReminder() {
-        log.info("Sending out an order reminder...");
+        log.info("Sending out the order reminder...");
         LocalDate now = LocalDate.now();
         clientHandler.sendFoodOrderReminder(client, getReminderText(now));
     }
 
     @Scheduled(cron = "0 " + AppConfig.orderMinute + " " + AppConfig.orderHour + " * * 1-5")
     public void sendOrderAndConfirmation() {
-        log.info("Sending out the order...");
+        log.info("Sending out the order confirmation message...");
         clientHandler.orderFood(client, false);
     }
 
-    @Scheduled(cron = "0 " + AppConfig.closingMinute + " " + AppConfig.closingHour + " * * 1-5")
+    @Scheduled(cron = "0 0 0 * * 1-5")
     public void closeOrder() {
         log.info("closing the order...");
         clientHandler.closeOrder();
