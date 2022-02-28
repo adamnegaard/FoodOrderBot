@@ -1,4 +1,4 @@
-package dk.themacs.foodOrderBot.mail.formatters;
+package dk.themacs.foodOrderBot.mail.senders;
 
 import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.mail.MailService;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-@Component
+@Component("SenderWithNumbers")
 public class SenderWithNumbers extends FoodOrderSender {
 
     public SenderWithNumbers(MailService mailService,

@@ -16,7 +16,8 @@ import dk.themacs.foodOrderBot.data.Result;
 import dk.themacs.foodOrderBot.data.TimeUtil;
 import dk.themacs.foodOrderBot.entities.BatchOrder;
 import dk.themacs.foodOrderBot.entities.PersonOrder;
-import dk.themacs.foodOrderBot.mail.formatters.FoodOrderSender;
+import dk.themacs.foodOrderBot.mail.senders.FoodOrderSender;
+import dk.themacs.foodOrderBot.mail.senders.FoodOrderSenderFactory;
 import dk.themacs.foodOrderBot.services.BatchOrder.BatchOrderService;
 import dk.themacs.foodOrderBot.services.PersonOrder.PersonOrderService;
 import org.slf4j.Logger;
@@ -40,20 +41,19 @@ public class ClientHandler {
 
     private final AppConfig appConfig;
     private final BatchOrderService batchOrderService;
-    private final FoodOrderSender foodOrderSender;
+    private final FoodOrderSenderFactory foodOrderSenderFactory;
     private final CommandParser commandParser;
     private final PersonOrderService personOrderService;
 
     private final static Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
-    public ClientHandler(AppConfig appConfig, BatchOrderService batchOrderService, FoodOrderSender foodOrderSender, CommandParser commandParser, PersonOrderService personOrderService) {
+    public ClientHandler(AppConfig appConfig, BatchOrderService batchOrderService, FoodOrderSenderFactory foodOrderSenderFactory, CommandParser commandParser, PersonOrderService personOrderService) {
         this.appConfig = appConfig;
         this.batchOrderService = batchOrderService;
-        this.foodOrderSender = foodOrderSender;
+        this.foodOrderSenderFactory = foodOrderSenderFactory;
         this.commandParser = commandParser;
         this.personOrderService = personOrderService;
     }
-
 
     public void sendFoodOrderReminder(MethodsClient client, String text) {
 
@@ -289,6 +289,7 @@ public class ClientHandler {
             }
 
             String mailContent;
+            FoodOrderSender foodOrderSender = foodOrderSenderFactory.getFoodOrderSenderForToday();
             if(lateOrder) {
                 mailContent = foodOrderSender.getLateOrder(personOrders);
             } else {
@@ -303,6 +304,8 @@ public class ClientHandler {
     }
 
     public void orderFood(String order) throws Exception {
+        FoodOrderSender foodOrderSender = foodOrderSenderFactory.getFoodOrderSenderForToday();
+
         foodOrderSender.orderFood(order);
     }
 
@@ -312,6 +315,7 @@ public class ClientHandler {
             log.info("No batch orders were started today");
             return;
         }
+
         BatchOrder batchOrder = batchOrderResult.getValue();
         batchOrderService.order(batchOrder.getId());
         log.info("Successfully closed the batch order with ID: " + batchOrder.getId());

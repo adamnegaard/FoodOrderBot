@@ -49,14 +49,15 @@ public class ScheduledJobs {
     private String getReminderText(LocalDate now) {
         String daily = "Hvad kunne du tænke dig til frokost på kontoret fra baksandwich.dk i dag?\n\n" +
                 "Bestillingen bliver sendt kl. " + AppConfig.orderHour + ":" + AppConfig.orderMinute + ".";
+
         // Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5
-        DayOfWeek day = now.getDayOfWeek();
-        switch (day.getValue()) {
-            case 5:
-                return "*#Lunch_Eins_Zwei_Freitag*\n" + daily + "\n\n *_HUSK selv at skrive om udbringning i den kommende uge!_*";
-            default:
-                return "*#Lunch_" + day.getDisplayName(TextStyle.FULL, ENGLISH) + "*\n" + daily;
-        }
+        DayOfWeek dayOfWeek = now.getDayOfWeek();
+
+        return switch (dayOfWeek) {
+            case FRIDAY -> "*#Lunch_Eins_Zwei_Freitag*\n" + daily + "\n\n *_HUSK selv at skrive om udbringning i den kommende uge!_*";
+            case MONDAY, TUESDAY, WEDNESDAY, THURSDAY -> "*#Lunch_" + dayOfWeek.getDisplayName(TextStyle.FULL, ENGLISH) + "*\n" + daily;
+            default -> throw new IllegalArgumentException("No reminder text for day of week: " + dayOfWeek.getDisplayName(TextStyle.FULL, ENGLISH));
+        };
     }
 
 }

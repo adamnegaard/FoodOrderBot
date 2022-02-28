@@ -19,6 +19,8 @@ company.domain = <company_domain>
 logging.level.root = INFO
 logging.level.com.slack.api = ERROR
 
+logging.logback.rollingpolicy.max-history = 30
+logging.logback.rollingpolicy.file-name-pattern = ${LOG_FILE}.%d{yyyy-MM-dd}.gz
 logging.file.name = foodOrderBot.log
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/<database_name>

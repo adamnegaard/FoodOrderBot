@@ -1,4 +1,4 @@
-package dk.themacs.foodOrderBot.mail.formatters;
+package dk.themacs.foodOrderBot.mail.senders;
 
 import dk.themacs.foodOrderBot.entities.PersonOrder;
 import dk.themacs.foodOrderBot.mail.Mail;
@@ -32,7 +32,7 @@ public abstract class FoodOrderSender {
     public String getOnTimeOrder(Set<PersonOrder> personOrders) {
         String orderString = getOrders(personOrders);
 
-        return getHello() + "\n" +
+        return getHello() + ".\n" +
                 getOrderRequest() + ":\n\n" +
                 orderString + "\n" +
                 "Tak!\n\n" +
