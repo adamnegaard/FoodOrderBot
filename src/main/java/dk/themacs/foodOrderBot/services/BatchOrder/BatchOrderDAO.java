@@ -31,7 +31,6 @@ public class BatchOrderDAO implements BatchOrderService {
     public Result<BatchOrder> readRecent() {
         Iterable<BatchOrder> batchOrders = batchOrderRepository.findAll();
         Optional<BatchOrder> batchOrderOptional = StreamSupport.stream(batchOrders.spliterator(), false)
-                .filter(bo -> !bo.isOrdered())
                 .max(Comparator.comparing(BatchOrder::getStartedTs));
 
         if(!batchOrderOptional.isPresent()) {

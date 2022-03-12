@@ -40,7 +40,7 @@ public class ScheduledJobs {
         clientHandler.orderFood(client, false);
     }
 
-    @Scheduled(cron = "0 0 0 * * 1-5")
+    @Scheduled(cron = "0 0 0 * * *")
     public void closeOrder() {
         log.info("closing the order...");
         clientHandler.closeOrder();

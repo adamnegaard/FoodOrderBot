@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.javamail.JavaMailSender;
 
 import java.io.IOException;
 import java.util.List;
@@ -91,11 +90,15 @@ public class SlackSetup {
                     // react with a checkmark on the reminder and the action
                     Message actionMessage = payLoad.getMessage();
                     String channelId = payLoad.getChannel().getId();
+
                     clientHandler.addReaction(methodsClient, "white_check_mark", channelId, actionMessage.getThreadTs());
                     clientHandler.addReaction(methodsClient, "white_check_mark", channelId, actionMessage.getTs());
 
-                    // remove the actions, since it should not be ordered again
-                    removeActions(methodsClient, actionMessage, channelId);
+                    // remove the actions from all the previous food order messages since it should not be ordered again
+                    List<Message> sendFoodOrderMessages = listSendFoodOrderMessages(methodsClient, actionMessage, channelId, userId);
+                    for(Message message : sendFoodOrderMessages) {
+                        removeActions(methodsClient, message, channelId);
+                    }
 
 
                 } catch (Exception e) {
@@ -122,10 +125,21 @@ public class SlackSetup {
         return methodsClient;
     }
 
-    private ChatUpdateResponse removeActions(MethodsClient methodsClient, Message actionMessage, String channelId) throws SlackApiException, IOException {
+    private List<Message> listSendFoodOrderMessages(MethodsClient methodsClient, Message actionMessage, String channelId, String botUserId) throws SlackApiException, IOException {
+        var repliesToFoodThread = methodsClient.conversationsReplies(c -> c
+                .ts(actionMessage.getThreadTs())
+                .channel(channelId));
 
+        // return all the replies to the food thread sent by the bot
+        return repliesToFoodThread.getMessages().stream().filter(m -> m.getUser().equals(botUserId)).collect(Collectors.toList());
+    }
+
+    private ChatUpdateResponse removeActions(MethodsClient methodsClient, Message actionMessage, String channelId) throws SlackApiException, IOException {
+        if (actionMessage.getBlocks() == null) {
+            return null;
+        }
         // get all blocks that are not Actions
-        List<LayoutBlock> blocks = actionMessage.getBlocks().stream().filter(b -> !ActionsBlock.class.isInstance(b)).collect(Collectors.toList());
+        List<LayoutBlock> blocks = actionMessage.getBlocks().stream().filter(b -> !(b instanceof ActionsBlock)).collect(Collectors.toList());
 
         return methodsClient.chatUpdate(c -> c
                 .channel(channelId)

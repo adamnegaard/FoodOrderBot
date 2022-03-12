@@ -149,7 +149,9 @@ public class ClientHandler {
 
     private String determineEmojiFromOrder(String order) {
         String lowerCaseOrder = order.toLowerCase(Locale.ROOT);
-        if (lowerCaseOrder.contains("salat")) {
+        if(lowerCaseOrder.contains("club")) {
+            return "bacon";
+        } else if (lowerCaseOrder.contains("salat")) {
             return "green_salad";
         } else if (lowerCaseOrder.contains("sand")) {
             return "sandwich";
@@ -221,14 +223,16 @@ public class ClientHandler {
 
                 BatchOrder batchOrder = recentBatchOptional.get();
 
-                Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, lateOrder, true);
+                boolean isLateOrder = lateOrder && batchOrder.isOrdered();
+
+                Optional<String> foodOrderMessageOptional = getFoodOrderMessage(client, batchOrder, isLateOrder, true);
 
                 if(foodOrderMessageOptional.isPresent()) {
 
                     String foodOrderMessage = foodOrderMessageOptional.get();
 
-                    if (lateOrder) {
-                        handleLateOrder(client, foodOrderMessage, batchOrder);
+                    if (isLateOrder) {
+                        handleOrderUpdate(client, foodOrderMessage, batchOrder);
                     } else {
                         handleOnTimeOrder(client, foodOrderMessage, batchOrder);
                     }
@@ -247,7 +251,7 @@ public class ClientHandler {
         sendFoodOrderActionMessage(client, "Bestil dagens frokost besked", foodOrderMessage, batchOrder.getStartedTs());
     }
 
-    private void handleLateOrder(MethodsClient client, String foodOrderMessage, BatchOrder batchOrder) throws SlackApiException, IOException {
+    private void handleOrderUpdate(MethodsClient client, String foodOrderMessage, BatchOrder batchOrder) throws SlackApiException, IOException {
         // log a confirmation
         log.info("Sent out late message for batch order with id: " + batchOrder.getId());
         // send a confirmation in slack
@@ -304,9 +308,18 @@ public class ClientHandler {
     }
 
     public void orderFood(String order) throws Exception {
+        Result<BatchOrder> batchOrderResult = batchOrderService.readRecent();
+        if (batchOrderResult.isError()) {
+            log.info("No batch orders were started today");
+            return;
+        }
+
         FoodOrderSender foodOrderSender = foodOrderSenderFactory.getFoodOrderSenderForToday();
 
         foodOrderSender.orderFood(order);
+
+        BatchOrder batchOrder = batchOrderResult.getValue();
+        batchOrderService.order(batchOrder.getId());
     }
 
     public void closeOrder() {
