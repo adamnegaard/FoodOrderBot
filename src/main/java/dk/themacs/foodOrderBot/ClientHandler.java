@@ -4,9 +4,15 @@ import com.slack.api.bolt.context.builtin.EventContext;
 import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.request.auth.AuthTestRequest;
 import com.slack.api.methods.request.reactions.ReactionsAddRequest;
+import com.slack.api.methods.response.auth.AuthTestResponse;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.methods.response.reactions.ReactionsAddResponse;
+import com.slack.api.model.Message;
+import com.slack.api.model.block.ActionsBlock;
+import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.event.MessageEvent;
 import dk.themacs.foodOrderBot.commands.CommandParser;
 import dk.themacs.foodOrderBot.commands.ParsedCommand;
@@ -26,10 +32,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.slack.api.model.block.Blocks.*;
 import static com.slack.api.model.block.composition.BlockCompositions.*;
@@ -79,6 +83,8 @@ public class ClientHandler {
 
         String threadTs = messageEvent.getThreadTs();
         String userId = messageEvent.getUser();
+        String orderText = messageEvent.getText();
+        String eventTs = messageEvent.getEventTs();
 
         // ignore all messages coming from the bot itself
         if(!botUserId.equals(userId) && threadTs != null) {
@@ -87,20 +93,25 @@ public class ClientHandler {
             if(!batchOrderResult.isError() && threadTs.equals(batchOrderResult.getValue().getStartedTs())) {
 
                 try {
-                    ParsedCommand command = commandParser.getParsedCommand(messageEvent.getText());
+                    ParsedCommand command = commandParser.getParsedCommand(orderText);
 
                     //Check if the order is late
                     boolean lateOrder = isOrderLate();
 
-                    handleCommand(client, command, userId, channelId, threadTs, messageEvent.getEventTs(), lateOrder);
+                    handleCommand(client, command, userId, channelId, threadTs, eventTs, lateOrder);
 
                     log.info("Processed order of user with ID: " + userId);
                 } catch(UnknownCommandException unknownCommandException) {
                     try {
-                        if (unknownCommandException.isInform())
-                            sendMessage(client, unknownCommandException.getMessage(), threadTs);
-                    } catch (Exception e) {
+                        if(orderText.toLowerCase().contains("springer")) {
+                            addReaction(client, "kangaroo", channelId, eventTs);
+                        }
 
+                        if (unknownCommandException.isInform()) {
+                            sendMessage(client, unknownCommandException.getMessage(), threadTs);
+                        }
+                    } catch (Exception e) {
+                        log.error("Error when handling UnknownCommandException", e);
                     }
                 } catch (Exception e) {
                     log.error("Unknown error processing order of user with ID: " + userId, e);
@@ -322,7 +333,18 @@ public class ClientHandler {
         batchOrderService.order(batchOrder.getId());
     }
 
-    public void closeOrder() {
+    public String getBotUserId(MethodsClient client) {
+        try {
+            // get the bots userID
+            AuthTestResponse authTestResponse = client.authTest(AuthTestRequest.builder().build());
+            return authTestResponse.getUserId();
+        } catch (Exception e) {
+            log.error("Unable to get bots user id", e);
+            return null;
+        }
+    }
+
+    public void closeOrder(MethodsClient client) {
         Result<BatchOrder> batchOrderResult = batchOrderService.readRecent();
         if (batchOrderResult.isError()) {
             log.info("No batch orders were started today");
@@ -331,8 +353,47 @@ public class ClientHandler {
 
         BatchOrder batchOrder = batchOrderResult.getValue();
         batchOrderService.order(batchOrder.getId());
+
+        try {
+            String botUserId = getBotUserId(client);
+            removeActionsFromFoodOrderMessages(client, batchOrder.getStartedTs(), appConfig.getChannelId(), botUserId);
+        } catch (Exception e) {
+            log.error("Unable to remove actions from food order message when closing it", e);
+        }
+
         log.info("Successfully closed the batch order with ID: " + batchOrder.getId());
     }
+
+    public void removeActionsFromFoodOrderMessages(MethodsClient client, String messageThreadTs, String channelId, String userId) throws SlackApiException, IOException {
+        List<Message> sendFoodOrderMessages = listSendFoodOrderMessages(client, messageThreadTs, channelId, userId);
+        for(Message message : sendFoodOrderMessages) {
+            removeActions(client, message, channelId);
+        }
+    }
+
+    private List<Message> listSendFoodOrderMessages(MethodsClient methodsClient, String messageThreadTs, String channelId, String botUserId) throws SlackApiException, IOException {
+        var repliesToFoodThread = methodsClient.conversationsReplies(c -> c
+                .ts(messageThreadTs)
+                .channel(channelId));
+
+        // return all the replies to the food thread sent by the bot
+        return repliesToFoodThread.getMessages().stream().filter(m -> m.getUser().equals(botUserId)).collect(Collectors.toList());
+    }
+
+    private ChatUpdateResponse removeActions(MethodsClient methodsClient, Message actionMessage, String channelId) throws SlackApiException, IOException {
+        if (actionMessage.getBlocks() == null) {
+            return null;
+        }
+        // get all blocks that are not Actions
+        List<LayoutBlock> blocks = actionMessage.getBlocks().stream().filter(b -> !(b instanceof ActionsBlock)).collect(Collectors.toList());
+
+        return methodsClient.chatUpdate(c -> c
+                .channel(channelId)
+                .blocks(blocks)
+                .ts(actionMessage.getTs())
+                .text(actionMessage.getText()));
+    }
+
 
 
 }

@@ -45,9 +45,7 @@ public class SlackSetup {
         Slack slack = app.getSlack();
         MethodsClient methodsClient = slack.methods(appConfig.getBotUserOAuthToken());
 
-        // get the bots userID
-        AuthTestResponse authTestResponse = methodsClient.authTest(AuthTestRequest.builder().build());
-        String userId = authTestResponse.getUserId();
+        String botUserId = clientHandler.getBotUserId(methodsClient);
 
         try {
 
@@ -64,7 +62,7 @@ public class SlackSetup {
 
             app.event(MessageEvent.class, (req, ctx) ->  {
 
-                clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), userId, req.getEvent(), ctx);
+                clientHandler.handleOrderProcessing(methodsClient, appConfig.getChannelId(), botUserId, req.getEvent(), ctx);
 
                 return ctx.ack();
 
@@ -95,10 +93,7 @@ public class SlackSetup {
                     clientHandler.addReaction(methodsClient, "white_check_mark", channelId, actionMessage.getTs());
 
                     // remove the actions from all the previous food order messages since it should not be ordered again
-                    List<Message> sendFoodOrderMessages = listSendFoodOrderMessages(methodsClient, actionMessage, channelId, userId);
-                    for(Message message : sendFoodOrderMessages) {
-                        removeActions(methodsClient, message, channelId);
-                    }
+                    clientHandler.removeActionsFromFoodOrderMessages(methodsClient, actionMessage.getThreadTs(), channelId, botUserId);
 
 
                 } catch (Exception e) {
@@ -124,29 +119,4 @@ public class SlackSetup {
         }
         return methodsClient;
     }
-
-    private List<Message> listSendFoodOrderMessages(MethodsClient methodsClient, Message actionMessage, String channelId, String botUserId) throws SlackApiException, IOException {
-        var repliesToFoodThread = methodsClient.conversationsReplies(c -> c
-                .ts(actionMessage.getThreadTs())
-                .channel(channelId));
-
-        // return all the replies to the food thread sent by the bot
-        return repliesToFoodThread.getMessages().stream().filter(m -> m.getUser().equals(botUserId)).collect(Collectors.toList());
-    }
-
-    private ChatUpdateResponse removeActions(MethodsClient methodsClient, Message actionMessage, String channelId) throws SlackApiException, IOException {
-        if (actionMessage.getBlocks() == null) {
-            return null;
-        }
-        // get all blocks that are not Actions
-        List<LayoutBlock> blocks = actionMessage.getBlocks().stream().filter(b -> !(b instanceof ActionsBlock)).collect(Collectors.toList());
-
-        return methodsClient.chatUpdate(c -> c
-                .channel(channelId)
-                .blocks(blocks)
-                .ts(actionMessage.getTs())
-                .text(actionMessage.getText()));
-    }
-
-
 }

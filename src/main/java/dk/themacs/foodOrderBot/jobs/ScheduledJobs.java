@@ -5,6 +5,7 @@ import dk.themacs.foodOrderBot.ClientHandler;
 import dk.themacs.foodOrderBot.config.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,7 @@ public class ScheduledJobs {
     @Scheduled(cron = "0 0 0 * * *")
     public void closeOrder() {
         log.info("closing the order...");
-        clientHandler.closeOrder();
+        clientHandler.closeOrder(client);
     }
 
     private String getReminderText(LocalDate now) {
