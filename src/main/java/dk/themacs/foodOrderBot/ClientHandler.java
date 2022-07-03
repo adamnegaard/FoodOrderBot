@@ -160,12 +160,14 @@ public class ClientHandler {
 
     private String determineEmojiFromOrder(String order) {
         String lowerCaseOrder = order.toLowerCase(Locale.ROOT);
-        if(lowerCaseOrder.contains("club")) {
+        if (lowerCaseOrder.contains("club")) {
             return "bacon";
         } else if (lowerCaseOrder.contains("salat")) {
             return "green_salad";
         } else if (lowerCaseOrder.contains("sand")) {
             return "sandwich";
+        } else if (lowerCaseOrder.contains("tun") || lowerCaseOrder.contains("laks")) {
+            return "fish";
         } else {
             return "thumbsup";
         }
